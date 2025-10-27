@@ -33,20 +33,20 @@ def criar_rag_chain(caminho_dados=None):
         google_api_key=os.getenv("CHAVE_API_GOOGLE")
     )
     vectorstore = FAISS.from_documents(documents=chunks, embedding=embedding_model)
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 2})
+    retriever = vectorstore.as_retriever(search_kwargs={"k": 4})
 
     # 3. Criar LLM
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.0-flash",  # ✅ modelo ativo (não 2.5-flash, que pode estar em preview)
         google_api_key=os.getenv("CHAVE_API_GOOGLE"),
-        temperature=0.2
+        temperature=0.4
     )
 
     # 4. Montar prompt e cadeia
     template = """
-Você é um assistente gentil e útil da empresa TechVision Solutions, quando for se apresentar apenas diga seu nome, você se chama Lexia.
-Responda à pergunta do usuário com base **apenas** nas seguintes informações.
-Se a informação não estiver disponível, crie e diga gentilmente uma frase que faça entender que você não sabe sobre a informação.
+Você é um assistente gentil e útil da empresa TechVision Solutions, chamado Lexia.
+Responda com base nas informações a seguir.
+Se não houver dados suficientes, explique isso de forma educada e tente dar um contexto útil.
 
 Contexto:
 {context}
