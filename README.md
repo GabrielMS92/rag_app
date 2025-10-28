@@ -16,7 +16,7 @@ Estrutura básica:
 
 ## Requisitos
 
-- Python 3.8+ recomendado
+- Python 3.13+ (o `pyproject.toml` exige >=3.13)
 - Recomenda-se usar um ambiente virtual (venv/virtualenv/conda)
 - Dependências do projeto listadas em `requirements.txt` (instalar com pip)
 
@@ -55,14 +55,20 @@ Importante: nunca commit seu `.env` real ou arquivos de credenciais (ex.: `servi
 
 ## Como rodar os scripts de exemplo
 
-Abra o terminal com o ambiente virtual ativado e rode:
+Abra o terminal com o ambiente virtual ativado e rode (os scripts estão dentro da pasta `usando API do google`):
 
 ```powershell
-python dia1_teste_gemini.py
-python dia2_carregar_dados.py
+python '.\usando API do google\container1_testando_api_gemini.py'
+python '.\usando API do google\container2_split_document_in_chunks.py'
 ```
 
-Veja o conteúdo dos scripts para entender os parâmetros e saídas — alguns scripts podem depender das variáveis do `.env` ou de arquivos em `data/`.
+Para rodar a interface Streamlit (se desejar):
+
+```powershell
+streamlit run '.\usando API do google\contaier5_interface_streamlit.py'
+```
+
+Veja o conteúdo dos scripts dentro da pasta `usando API do google` para entender parâmetros e dependências — alguns scripts dependem das variáveis do `.env` ou de arquivos em `data/`.
 
 ## Boas práticas
 
@@ -81,4 +87,4 @@ Veja o conteúdo dos scripts para entender os parâmetros e saídas — alguns s
 Se quiser, eu já posso:
 - Adicionar uma seção detalhada mostrando como criar uma conta de serviço no Google Cloud e gerar o JSON de credenciais.
 - Atualizar o README para permitir que `data/dados_empresa.txt` seja versionado (se quiser compartilhar esse arquivo).
-# RAG_project
+

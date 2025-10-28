@@ -1,6 +1,6 @@
 [project]
 name = "usando_api_do_google"
-version = "0.1.0"
+version = "1.0.2"
 description = ""
 authors = [
     {name = "renato",email = "renato.j.olveira@gmail.com"}
