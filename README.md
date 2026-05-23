@@ -99,3 +99,6 @@ Projeto de RAG (Retrieval-Augmented Generation) com LangChain e Google Gemini. U
 
 https://github.com/user-attachments/assets/14e768fb-6761-4c32-b5b6-615ef38699c7
 
+## Authors
+- [Renato Oliveira](https://github.com/RenatoOJ-Dev)
+- Add your clickable username here. It should point to your GitHub account. 
