@@ -33,26 +33,26 @@ Projeto de RAG (Retrieval-Augmented Generation) com LangChain e Google Gemini. U
 
 4. Suba o PostgreSQL usando uma imagem do Docker que já venha com `pgvector`.
 
-		O projeto foi pensado para conversar com um PostgreSQL local, então o mais simples é subir um container com a extensão pronta. A imagem oficial do `pgvector` no Docker Hub é esta: [pgvector/pgvector](https://hub.docker.com/r/pgvector/pgvector).
+    O projeto foi pensado para conversar com um PostgreSQL local, então o mais simples é subir um container com a extensão pronta. A imagem oficial do `pgvector` no Docker Hub é esta: [pgvector/pgvector](https://hub.docker.com/r/pgvector/pgvector).
 
-		O código usa por padrão esta conexão:
+    O código usa por padrão esta conexão:
 
-		```text
-		postgresql://postgres:senha123@localhost:5432/rag_db
-		```
+    ```text
+    postgresql://postgres:senha123@localhost:5432/rag_db
+    ```  
+    
+    Exemplo rápido com Docker:
 
-		Exemplo rápido com Docker:
+    ```bash
+    docker run --name rag-db \
+        -e POSTGRES_USER=postgres \
+        -e POSTGRES_PASSWORD=senha123 \
+        -e POSTGRES_DB=rag_db \
+        -p 5432:5432 \
+        -d pgvector/pgvector:pg16
+    ```
 
-		```bash
-		docker run --name rag-db \
-			-e POSTGRES_USER=postgres \
-			-e POSTGRES_PASSWORD=senha123 \
-			-e POSTGRES_DB=rag_db \
-			-p 5432:5432 \
-			-d pgvector/pgvector:pg16
-		```
-
-		Se você usar outro usuário, senha, host ou banco, ajuste o valor em `consume_api/rag_core.py` e no script de carga.
+    Se você usar outro usuário, senha, host ou banco, ajuste o valor em `consume_api/rag_core.py` e no script de carga.
 
 5. Crie o banco e a tabela esperados pelo projeto, caso ainda não existam.
 
