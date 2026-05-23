@@ -102,6 +102,6 @@ https://github.com/user-attachments/assets/14e768fb-6761-4c32-b5b6-615ef38699c7
 ## Authors
 - [Renato Oliveira](https://github.com/RenatoOJ-Dev)
 - [Seu_nome_addriel](https://github.com/addrielteixeira)
-- [Seu_nome_dr](https://github.com/GabrielMS92)
+- [Gabriel Moreira da Silva](https://github.com/GabrielMS92)
 - [Seu_nome_formigão](https://github.com/formigoniricardo)
 
