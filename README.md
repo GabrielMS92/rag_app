@@ -266,8 +266,9 @@ rag_app/
 
 ## Preview
 
+[![Preview](https://img.youtube.com/vi/KkOIZ0o1Y98/maxresdefault.jpg)](https://youtu.be/KkOIZ0o1Y98)
 
-[![Preview do Oráculo Corporativo](https://img.youtube.com/vi/KkOIZ0o1Y98/maxresdefault.jpg)](https://youtu.be/KkOIZ0o1Y98)
+[![Assistir no YouTube](https://img.shields.io/badge/▶_Assistir_Preview-red?style=for-the-badge&logo=youtube)](https://youtu.be/KkOIZ0o1Y98)
 
 ---
 
