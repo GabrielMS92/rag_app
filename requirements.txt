@@ -92,3 +92,5 @@ websockets==16.0
 xxhash==3.7.0
 yarl==1.23.0
 zstandard==0.25.0
+pypdf>=5.0
+fpdf2>=2.8

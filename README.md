@@ -1,106 +1,283 @@
-# Rag app
-Projeto de RAG (Retrieval-Augmented Generation) com LangChain e Google Gemini. Usa dados fictícios da empresa (ex: dados_empresa.txt) para gerar respostas precisas e humanizadas. Ideal para chatbots internos, assistentes de conhecimento ou sistemas de suporte. Inclui: carregamento de dados, chunking inteligente, embeddings e busca semântica
+# 🔮 Oráculo Corporativo — RAG AI
 
-## Technologies
-* `python`  
-* `Cloud console`  
-* `Docker`
-* `PostgreSql`
-* `PGVector`
+Sistema de Recuperação Aumentada por Geração (RAG) que transforma documentos estáticos em uma base de conhecimento consultável via chat. Utiliza Google Gemini como LLM, PostgreSQL + pgvector para armazenamento vetorial e Streamlit como interface. Roda inteiramente em containers Docker com Alpine no GitHub Codespaces.
 
-## Running the Project
+## Tecnologias
 
-1. Crie e ative um ambiente virtual Python.
+- **Python 3.12** · **Streamlit** · **Google Gemini** (embeddings + LLM)
+- **PostgreSQL 16 + pgvector** · **Docker + Alpine** · **LangChain**
+- **pypdf** (leitura de PDF) · **fpdf2** (geração de PDF) · **psycopg2** (PostgreSQL)
 
-	```bash
-	python -m venv .venv
-	source .venv/bin/activate
-	```
+## Arquitetura
 
-2. Instale as dependências.
+```
+Usuário ──► Streamlit (porta 8501)
+                │
+                ├─ Upload (PDF/TXT/CSV) → chunking → embeddings → PostgreSQL
+                │
+                ├─ Pergunta → Gemini Embeddings → vetor
+                │                                    │
+                ├─ Busca por similaridade ◄──── PostgreSQL + pgvector
+                │
+                └─ Contexto + Pergunta → Gemini LLM → Resposta + Fontes
+                                                         │
+                                                         └─ Download em PDF
+```
 
-	```bash
-	pip install -r requirements.txt
-	```
+---
 
-3. Configure a variável de ambiente da API do Google Gemini.
+## Pré-requisito
 
-	Crie um arquivo `.env` na raiz do projeto com o mesmo nome usado pelo código:
+Uma chave da API Google Gemini — obtenha grátis em [aistudio.google.com](https://aistudio.google.com/)
 
-	```env
-	CHAVE_API_GOOGLE=cole_sua_chave_aqui
-	```
+---
 
-4. Suba o PostgreSQL usando uma imagem do Docker que já venha com `pgvector`.
+## Como rodar no GitHub Codespaces
 
-    O projeto foi pensado para conversar com um PostgreSQL local, então o mais simples é subir um container com a extensão pronta. A imagem oficial do `pgvector` no Docker Hub é esta: [pgvector/pgvector](https://hub.docker.com/r/pgvector/pgvector).
+### 1. Configurar a chave da API (uma vez só)
 
-    O código usa por padrão esta conexão:
+Vá em **github.com** → clique no seu **avatar** (canto superior direito) → **Settings** → no menu lateral, seção **"Code, planning, and automation"**, clique em **Codespaces** → **Secrets** → **New secret**:
 
-    ```text
-    postgresql://postgres:senha123@localhost:5432/rag_db
-    ```  
-    
-    Exemplo rápido com Docker:
+| Campo | Valor |
+|-------|-------|
+| **Name** | `CHAVE_API_GOOGLE` |
+| **Value** | sua chave do Gemini |
+| **Repository access** | selecione o repositório `rag_app` |
 
-    ```bash
-    docker run --name rag-db \
-        -e POSTGRES_USER=postgres \
-        -e POSTGRES_PASSWORD=senha123 \
-        -e POSTGRES_DB=rag_db \
-        -p 5432:5432 \
-        -d pgvector/pgvector:pg16
-    ```
+### 2. Abrir o Codespace
 
-    Se você usar outro usuário, senha, host ou banco, ajuste o valor em `consume_api/rag_core.py` e no script de carga.
+No repositório, clique em **Code** → **Codespaces** → **Create codespace on main**.
 
-5. Crie o banco e a tabela esperados pelo projeto, caso ainda não existam.
+Aguarde o ambiente carregar (o devcontainer instala Docker automaticamente).
 
-	```sql
-	CREATE EXTENSION IF NOT EXISTS vector;
-	CREATE DATABASE rag_db;
+### 3. Subir a aplicação
 
-	\c rag_db
+No terminal do Codespace, execute:
 
-	CREATE TABLE IF NOT EXISTS documentos (
-		 id SERIAL PRIMARY KEY,
-		 document_id VARCHAR(255),
-		 chunk_text TEXT NOT NULL,
-		 chunk_index INTEGER,
-		 section VARCHAR(255),
-		 embedding VECTOR(3072),
-		 metadata JSONB,
-		 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-	);
-	```
+```bash
+docker compose up --build
+```
 
-6. Disponibilize o arquivo de origem usado na carga de dados.
+O primeiro build leva alguns minutos (Alpine compilando dependências). Builds seguintes são instantâneos graças ao cache do Docker.
 
-	O pipeline de ingestão procura o arquivo `data_example/wiki_nexus_monitor.txt`. Se ele não existir no seu ambiente, copie o conteúdo para esse caminho ou ajuste o caminho em `consume_api/insert_data_in_database/make_chunks.py`.
+Aguarde até ver no log:
 
-7. Carregue os dados no banco.
+```
+You can now view your Streamlit app in your browser.
+```
 
-	Execute a partir da raiz do repositório:
+### 4. Acessar a aplicação
 
-	```bash
-	python -m consume_api.insert_data_in_database.inserir_dados_postgres
-	```
+Na aba **Ports** (parte inferior do VS Code), clique no 🌐 da porta **8501**.
 
-8. Inicie a aplicação.
+Se aparecer erro 401 (Unauthorized), clique com o botão direito na porta 8501 → **Port Visibility** → **Public**. Depois clique no link novamente.
 
-	```bash
-	streamlit run consume_api/interface_main.py
-	```
+### 5. Carregar dados no banco
 
-	A interface vai abrir no navegador e consultar os dados já inseridos na tabela `documentos`.
+**Opção A — Pela interface (recomendado):**
+
+No sidebar da aplicação, use **Upload de documentos** → envie um arquivo `.pdf`, `.txt` ou `.csv` → clique em **Indexar arquivo**.
+
+**Opção B — Pelo terminal (dados de exemplo):**
+
+Abra um segundo terminal no Codespace e execute:
+
+```bash
+docker compose exec app python -m consume_api.insert_data_in_database.inserir_dados_postgres
+```
+
+### 6. Usar
+
+Digite uma pergunta no chat e veja a resposta com as fontes do banco. Use o botão **📥 Baixar conversa em PDF** no sidebar para exportar o histórico.
+
+---
+
+## Como rodar localmente (Docker Desktop)
+
+### 1. Pré-requisitos locais
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado e rodando
+- [Git](https://git-scm.com/) instalado
+
+### 2. Clonar o repositório
+
+```bash
+git clone https://github.com/GabrielMS92/rag_app.git
+cd rag_app
+```
+
+### 3. Configurar a chave da API
+
+```bash
+cp .env.example .env
+```
+
+Abra o arquivo `.env` no VS Code e substitua `cole_sua_chave_aqui` pela sua chave do Gemini:
+
+```
+CHAVE_API_GOOGLE=sua_chave_aqui
+```
+
+> **Importante:** o `.env` está no `.gitignore` e nunca será enviado ao GitHub.
+> **Nota:** se o `.env` e o Codespace Secret existirem ao mesmo tempo, o Secret tem precedência. Não há conflito.
+
+### 4. Subir a aplicação
+
+No terminal do VS Code (`` Ctrl+` `` para abrir), execute:
+
+```bash
+docker compose up --build
+```
+
+Aguarde até ver `You can now view your Streamlit app in your browser.`
+
+### 5. Acessar
+
+Abra no navegador: **http://localhost:8501**
+
+### 6. Carregar dados e usar
+
+Mesmo processo do Codespaces: upload pelo sidebar ou pelo terminal:
+
+```bash
+docker compose exec app python -m consume_api.insert_data_in_database.inserir_dados_postgres
+```
+
+---
+
+## Comandos úteis
+
+| Ação | Comando |
+|------|---------|
+| **Subir a aplicação** | `docker compose up --build` |
+| **Subir em background** | `docker compose up --build -d` |
+| **Parar a aplicação** | `docker compose down` |
+| **Parar e apagar os dados do banco** | `docker compose down -v` |
+| **Rebuild (após alterar código)** | `docker compose up --build` |
+| **Ver logs** | `docker compose logs -f app` |
+| **Carregar dados de exemplo** | `docker compose exec app python -m consume_api.insert_data_in_database.inserir_dados_postgres` |
+| **Abrir shell no container** | `docker compose exec app sh` |
+
+---
+
+## Requisitos Funcionais
+
+| RF | Descrição | Status |
+|----|-----------|--------|
+| RF01 | Upload de arquivos (PDF, TXT, CSV) pela interface | ✅ |
+| RF02 | Fragmentação em chunks | ✅ |
+| RF03 | Geração de embeddings via Gemini | ✅ |
+| RF04 | Armazenamento vetorial no PostgreSQL | ✅ |
+| RF05 | Conversão da pergunta em vetor | ✅ |
+| RF06 | Recuperação por similaridade | ✅ |
+| RF07 | Resposta fundamentada no contexto | ✅ |
+| RF08 | Histórico de mensagens na sessão | ✅ |
+| RF09 | Limpeza / reinício da base | ✅ |
+| RF10 | Status de processamento na interface | ✅ |
+| RF11 | Ajuste de temperatura da IA | ✅ |
+| RF12 | Citação de fontes dos documentos | ✅ |
+
+## Requisitos Não-Funcionais
+
+| RNF | Descrição | Como foi atendido |
+|-----|-----------|-------------------|
+| RNF01 | Resposta em até 10s | Busca vetorial + Gemini Flash atingem ~3-5s |
+| RNF02 | Suportar milhares de fragmentos | PostgreSQL + pgvector com busca exata |
+| RNF03 | Credenciais via variáveis de ambiente | Codespace Secrets, sem chaves no código |
+| RNF04 | Interface intuitiva | Streamlit com chat, sidebar e feedback visual |
+| RNF05 | Portabilidade via Docker | Dockerfile Alpine + docker-compose |
+
+---
+
+## Melhorias da C3 em relação à C2
+
+1. **Bug crítico corrigido**: a ingestão gravava na tabela `documentos` via SQL, mas a busca usava o PGVector do LangChain (tabelas internas `langchain_pg_*`). Os dados nunca eram encontrados. Agora ambos usam a mesma tabela com SQL direto.
+2. **Modelo de embedding unificado**: ingestão usava `gemini-embedding-001`, busca usava `gemini-embedding-2` (vetores incompatíveis). Agora ambos usam `gemini-embedding-001`.
+3. **Credenciais removidas do código**: host e senha hardcoded substituídos por variáveis de ambiente.
+4. **RF01 completo**: upload agora aceita PDF, TXT e CSV (antes só TXT).
+5. **Interface evoluída**: chat com histórico, slider de temperatura, reset da base, fontes, e download em PDF.
+6. **Containerização completa**: Dockerfile Alpine + docker-compose + devcontainer para Codespaces.
+7. **Embeddings em lote**: ingestão otimizada com `embed_documents` (batch) em vez de uma chamada por chunk.
+8. **Schema auto-criado**: `init.sql` + `garantir_schema()` eliminam setup manual do banco.
+9. **Download de respostas**: exportação do histórico de conversa em PDF.
+
+---
+
+## Variáveis de ambiente
+
+| Variável | Padrão | Descrição |
+|----------|--------|-----------|
+| `CHAVE_API_GOOGLE` | — | Chave Gemini (obrigatória) |
+| `DB_HOST` | `localhost` | Host do banco |
+| `DB_PORT` | `5432` | Porta |
+| `DB_NAME` | `rag_db` | Nome do banco |
+| `DB_USER` | `postgres` | Usuário |
+| `DB_PASSWORD` | `senha123` | Senha |
+| `LLM_TEMPERATURE` | `0.4` | Temperatura do modelo |
+| `RAG_TOP_K` | `5` | Chunks recuperados por busca |
+
+---
+
+## Estrutura do projeto
+
+```
+rag_app/
+├── consume_api/
+│   ├── interface_main.py             # Interface Streamlit (chat + sidebar + download PDF)
+│   ├── rag_core.py                   # Cadeia RAG, busca vetorial, ingestão, geração de PDF
+│   └── insert_data_in_database/
+│       ├── inserir_dados_postgres.py  # Ingestão via terminal
+│       └── make_chunks.py            # Chunking com LangChain
+├── data_example/
+│   └── wiki_nexus_monitor.txt        # Dados fictícios da TechVision Solutions
+├── docs/                             # Documentação C1, C2 e quadro de avaliações
+├── .devcontainer/devcontainer.json   # Configuração do GitHub Codespaces
+├── Dockerfile                        # Imagem Alpine da aplicação
+├── docker-compose.yml                # Orquestração App + PostgreSQL/pgvector
+├── init.sql                          # Schema inicial do banco (extensão + tabela)
+├── requirements.txt                  # Todas as dependências Python pinadas
+└── .env.example                      # Modelo de variáveis de ambiente
+```
+
+---
+
+## Lições aprendidas
+
+- Ingestão e busca devem usar o **mesmo modelo de embeddings** — vetores de modelos diferentes não são comparáveis, causando resultados vazios mesmo com dados no banco.
+- O PGVector do LangChain cria tabelas próprias (`langchain_pg_collection` / `langchain_pg_embedding`). Quando a ingestão é feita por SQL direto, a busca também precisa ser por SQL direto na mesma tabela.
+- Variáveis de ambiente e Codespace Secrets são essenciais para portabilidade e segurança — permitem mover de local para Docker para nuvem sem alterar código e sem expor credenciais.
+- Alpine reduz o tamanho da imagem Docker, mas exige atenção a dependências que precisam de compilação C/Rust (`gcc`, `musl-dev`, `postgresql-dev`, `cargo`).
+- O `docker-in-docker` no Codespaces precisa de `"moby": false` porque a imagem base Python agora usa Debian Trixie, que não tem o pacote `moby-cli`.
+
+---
+
+## Troubleshooting
+
+| Problema | Solução |
+|----------|---------|
+| Erro 401 ao abrir a URL | Na aba Ports, clique direito na 8501 → Port Visibility → Public |
+| Build muito lento no Alpine | Troque `alpine` por `slim-bookworm` na linha 3 do Dockerfile |
+| `connection refused` ao banco | Aguarde o healthcheck: `docker compose ps` → db deve estar `healthy` |
+| Porta 8501 não aparece | Aba Ports → Adicionar Porta → `8501` |
+| Codespace não sobe (recovery mode) | Verifique se o devcontainer.json tem `"moby": false` |
+| Chave da API não funciona | Confirme que o secret está em Settings do **perfil** → Codespaces → Secrets (não em Actions) |
+
+---
 
 ## Preview
 
 
 https://github.com/user-attachments/assets/14e768fb-6761-4c32-b5b6-615ef38699c7
 
-## Authors
-- [Renato Oliveira](https://github.com/RenatoOJ-Dev)
+---
+
+## Autores
+
 - [Addriel Teixeira Pereira](https://github.com/addrielteixeira)
 - [Gabriel Moreira da Silva](https://github.com/GabrielMS92)
+- [Renato Oliveira de Jesus](https://github.com/RenatoOJ-Dev)
 - [Ricardo Formigoni Souza](https://github.com/formigoniricardo)
+
+**Disciplina:** Desenvolvimento de Aplicações Web II — 2026/1
+**Professor:** Otávio Lube dos Santos
+**Instituição:** FAESA — Centro Universitário Espírito-santense

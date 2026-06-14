@@ -83,18 +83,45 @@ def garantir_schema():
 
 # ─────────────────────── Ingestão (upload) ───────────────────────
 
+def _extrair_texto(conteudo_bytes: bytes, nome_arquivo: str) -> str:
+    """Extrai texto puro de PDF, CSV ou TXT."""
+    ext = Path(nome_arquivo).suffix.lower()
+
+    if ext == ".pdf":
+        import io
+        from pypdf import PdfReader
+        reader = PdfReader(io.BytesIO(conteudo_bytes))
+        return "\n".join(page.extract_text() or "" for page in reader.pages)
+
+    if ext == ".csv":
+        import csv, io
+        texto = conteudo_bytes.decode("utf-8", errors="replace")
+        leitor = csv.reader(io.StringIO(texto))
+        return "\n".join(", ".join(row) for row in leitor)
+
+    # .txt ou qualquer outro → texto direto
+    return conteudo_bytes.decode("utf-8", errors="replace")
+
+
 def indexar_arquivo(conteudo_bytes: bytes, nome_arquivo: str,
                     on_progress=None) -> int:
-    """Recebe bytes de um arquivo .txt, faz chunking+embedding e grava no banco.
-    Retorna a quantidade de chunks inseridos. `on_progress(msg)` é callback opcional."""
+    """Recebe bytes de um arquivo (PDF, TXT ou CSV), faz chunking+embedding
+    e grava no banco. Retorna a quantidade de chunks inseridos."""
     from insert_data_in_database.make_chunks import carregar_e_dividir_chunks
 
     raw_api = os.getenv("CHAVE_API_GOOGLE")
     api_key = SecretStr(raw_api) if raw_api else None
 
-    # salvar temporariamente para o TextLoader do LangChain
-    with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as tmp:
-        tmp.write(conteudo_bytes)
+    if on_progress:
+        on_progress("Extraindo texto do arquivo...")
+    texto = _extrair_texto(conteudo_bytes, nome_arquivo)
+    if not texto.strip():
+        raise ValueError("Nenhum texto extraído do arquivo.")
+
+    # salvar como .txt temporário para o chunker do LangChain
+    with tempfile.NamedTemporaryFile(suffix=".txt", delete=False, mode="w",
+                                     encoding="utf-8") as tmp:
+        tmp.write(texto)
         tmp_path = tmp.name
 
     try:
@@ -134,6 +161,44 @@ def indexar_arquivo(conteudo_bytes: bytes, nome_arquivo: str,
         os.unlink(tmp_path)
 
     return len(chunks)
+
+
+# ─────────────────────── PDF de respostas ───────────────────────
+
+def gerar_pdf_conversa(mensagens: list) -> bytes:
+    """Gera um PDF com o histórico de conversa e retorna como bytes."""
+    from fpdf import FPDF
+
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=20)
+    pdf.add_page()
+
+    # Título
+    pdf.set_font("Helvetica", "B", 16)
+    pdf.cell(0, 12, "Oraculo Corporativo - Historico", new_x="LMARGIN", new_y="NEXT", align="C")
+    pdf.ln(6)
+
+    for msg in mensagens:
+        papel = "Voce" if msg["role"] == "user" else "Oraculo"
+
+        pdf.set_font("Helvetica", "B", 11)
+        pdf.cell(0, 8, f"{papel}:", new_x="LMARGIN", new_y="NEXT")
+
+        pdf.set_font("Helvetica", "", 10)
+        # Limpar caracteres que latin-1 não suporta (emojis)
+        texto = msg["content"].encode("latin-1", "replace").decode("latin-1")
+        pdf.multi_cell(0, 6, texto)
+        pdf.ln(4)
+
+        if msg.get("fontes"):
+            pdf.set_font("Helvetica", "I", 9)
+            for f in msg["fontes"]:
+                linha = f"  Fonte: {f['fonte']} | Secao: {f['secao']} | Sim: {f['similaridade']:.3f}"
+                linha = linha.encode("latin-1", "replace").decode("latin-1")
+                pdf.cell(0, 5, linha, new_x="LMARGIN", new_y="NEXT")
+            pdf.ln(3)
+
+    return pdf.output()
 
 
 def limpar_base():

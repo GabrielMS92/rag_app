@@ -1,15 +1,19 @@
 # interface_main.py — Oráculo Corporativo (Streamlit)
 """
 Interface de chat com:
-  RF01  Upload de arquivos (.txt)
+  RF01  Upload de arquivos (PDF, TXT, CSV)
   RF08  Histórico de mensagens na sessão
   RF09  Limpeza / reinício da base de dados
   RF10  Indicadores de status (spinners)
   RF11  Ajuste de temperatura da IA
   RF12  Citação de fontes recuperadas
+  +     Download das respostas em PDF
 """
 import streamlit as st
-from rag_core import criar_rag_chain, indexar_arquivo, limpar_base, contar_documentos
+from rag_core import (
+    criar_rag_chain, indexar_arquivo, limpar_base,
+    contar_documentos, gerar_pdf_conversa,
+)
 
 # ────────────── Página ──────────────
 st.set_page_config(page_title="Oráculo Corporativo", page_icon="🔮", layout="centered")
@@ -22,9 +26,12 @@ with st.sidebar:
 
     st.divider()
 
-    # RF01 — Upload de documentos
+    # RF01 — Upload de documentos (PDF, TXT, CSV)
     st.subheader("📄 Upload de documentos")
-    arquivo = st.file_uploader("Envie um arquivo .txt", type=["txt"])
+    arquivo = st.file_uploader(
+        "Envie um arquivo PDF, TXT ou CSV",
+        type=["pdf", "txt", "csv"],
+    )
     if arquivo and st.button("Indexar arquivo"):
         placeholder = st.empty()
         try:
@@ -46,6 +53,18 @@ with st.sidebar:
         limpar_base()
         st.success("Base limpa!")
         st.rerun()
+
+    st.divider()
+
+    # Download PDF do histórico
+    if st.session_state.get("messages"):
+        pdf_bytes = gerar_pdf_conversa(st.session_state.messages)
+        st.download_button(
+            label="📥 Baixar conversa em PDF",
+            data=pdf_bytes,
+            file_name="oraculo_historico.pdf",
+            mime="application/pdf",
+        )
 
 # ────────────── Chat principal ──────────────
 st.title("🔮 Oráculo Corporativo")
