@@ -23,11 +23,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    env_file:
-      - path: .env
-        required: false
     environment:
       - DB_HOST=db
+      - CHAVE_API_GOOGLE=${CHAVE_API_GOOGLE}
 
 volumes:
   pgdata:
