@@ -1,12 +1,25 @@
 # ── Oráculo Corporativo — RAG AI ──
-# Imagem Alpine conforme solicitado pelo professor.
-# Se o build demorar muito, troque "alpine" por "slim-bookworm" na linha abaixo.
+# Alpine conforme exigido pelo professor.
 FROM python:3.12-alpine
 
-# Dependências de sistema para compilar psycopg2, numpy, pyarrow etc.
+# ── Dependências de sistema para compilar pacotes C/Rust no Alpine ──
+#  - gcc g++ musl-dev          → compilação C/C++ genérica
+#  - postgresql-dev libpq      → psycopg2 (não-binary, compila contra libpq)
+#  - libffi-dev                → cffi (usado por cryptography)
+#  - openssl-dev               → cryptography (fallback se não houver wheel)
+#  - zlib-dev jpeg-dev         → Pillow
+#  - cmake make linux-headers  → build genérico (pyarrow, numpy, etc.)
+#  - git                       → GitPython (usa git cli)
+#  - cargo                     → pacotes Rust (orjson, rpds-py, pydantic-core)
+#                                se não tiver wheel musllinux pré-compilado
 RUN apk add --no-cache \
-    gcc g++ musl-dev postgresql-dev libpq \
-    cmake make linux-headers
+    gcc g++ musl-dev \
+    postgresql-dev libpq \
+    libffi-dev openssl-dev \
+    zlib-dev jpeg-dev \
+    cmake make linux-headers \
+    git \
+    cargo
 
 WORKDIR /app
 
