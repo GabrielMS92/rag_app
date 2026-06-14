@@ -267,7 +267,18 @@ rag_app/
 ## Preview
 
 
-https://github.com/user-attachments/assets/14e768fb-6761-4c32-b5b6-615ef38699c7
+[![Preview do Oráculo Corporativo](https://img.youtube.com/vi/KkOIZ0o1Y98/maxresdefault.jpg)](https://youtu.be/KkOIZ0o1Y98)
+
+---
+
+## Próximos passos
+
+- Autenticação de usuários com controle de sessão e permissões.
+- Índice vetorial HNSW ou IVFFlat para bases com milhões de chunks.
+- Deploy permanente em nuvem (Como Azure App Service + Azure Database for PostgreSQL ou outros Serviços).
+- Suporte a mais formatos de entrada (DOCX, JSON, HTML).
+- Persistência do histórico de chat no banco de dados.
+- Painel administrativo com métricas de uso e qualidade das respostas.
 
 ---
 
