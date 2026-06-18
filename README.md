@@ -76,7 +76,7 @@ Se aparecer erro 401 (Unauthorized), clique com o botão direito na porta 8501 �
 
 **Opção A — Pela interface (recomendado):**
 
-No sidebar da aplicação, use **Upload de documentos** → envie um arquivo `.pdf`, `.txt` ou `.csv` → clique em **Indexar arquivo**.
+No sidebar da aplicação, use **Upload de documentos** → baixei do repositório, os arquivos que constam na pasta data_example envie um desses arquivos `.pdf`, `.txt` ou `.csv`, clicando em **Indexar arquivo** (só pode enviar um por vez).
 
 **Opção B — Pelo terminal (dados de exemplo):**
 
